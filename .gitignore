@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+venv/
+ENV/
+env/
+.venv/
+*.sqlite3
+
+# VSCode/Editor specific
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
