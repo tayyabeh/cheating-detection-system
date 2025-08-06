@@ -21,9 +21,9 @@ drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
 # Start video capture
 cap = cv2.VideoCapture(1)  # Change to 0 if using default camera
-
-print("Starting iris detection...")
-print("Press ESC to exit")
+suspicious_start_time = None
+cheating_detected = False
+alert_message = "Normal - Forward Looking"
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -86,10 +86,156 @@ while cap.isOpened():
             cv2.circle(frame, (right_iris_x, right_iris_y), 2, (255, 0, 0), -1)  # Blue - Iris center
             
             # TODO: Calculate differences and implement gaze detection
-            # left_diff_x = left_iris_x - left_eye_x
-            # left_diff_y = left_iris_y - left_eye_y
-            # ... your logic here
-            
+
+            # Left eye differences
+            left_diff_x = left_iris_x - left_eye_x
+            left_diff_y = left_iris_y - left_eye_y
+
+            # Right eye differences  
+            right_diff_x = right_iris_x - right_eye_x
+            right_diff_y = right_iris_y - right_eye_y
+
+            # Average differences (both eyes combined)
+            avg_diff_x = (left_diff_x + right_diff_x) / 2
+            avg_diff_y = (left_diff_y + right_diff_y) / 2
+
+            # Print for debugging
+            print(f"Avg Diff - X: {avg_diff_x:.1f}, Y: {avg_diff_y:.1f}")
+
+            # Threshold for detection
+            THRESHOLD = 6
+
+            # Direction detection
+            if avg_diff_x > THRESHOLD:
+                horizontal = "Right"
+            elif avg_diff_x < -THRESHOLD:
+                horizontal = "Left"
+            else:
+                horizontal = "Center"
+
+            if avg_diff_y > THRESHOLD:
+                vertical = "Down"
+            elif avg_diff_y < -THRESHOLD:
+                vertical = "Up"
+            else:
+                vertical = "Center"
+
+            # Final direction
+            if horizontal == "Center" and vertical == "Center":
+                direction = "Forward"
+            else:
+                direction = f"{vertical} {horizontal}".strip()
+
+            print(f"Direction: {direction}")
+
+
+
+            # # Different sensitivity levels
+            # NORMAL_THRESHOLD = 8      # Below this = normal behavior
+            # SUSPICIOUS_THRESHOLD = 12 # Medium suspicion level  
+            # CHEATING_THRESHOLD = 18   # High cheating probability
+
+            # # Corner detection (diagonal movement)
+            # CORNER_THRESHOLD = 6      # Lower because corners are more suspicious
+            NORMAL_THRESHOLD = 6      # Values ≤6 = Normal
+            SUSPICIOUS_THRESHOLD = 8  # Values 7-8 = Suspicious  
+            CHEATING_THRESHOLD = 10   # Values >10 = Cheating
+            CORNER_THRESHOLD = 7      # Values 6-7 = Corner
+
+            # Classification system
+            def classify_behavior(avg_diff_x, avg_diff_y):
+                abs_x = abs(avg_diff_x)
+                abs_y = abs(avg_diff_y)
+                
+                # Normal behavior
+                if abs_x <= NORMAL_THRESHOLD and abs_y <= NORMAL_THRESHOLD:
+                    return "NORMAL", "Forward"
+                
+                # Corner looking (most suspicious)
+                elif abs_x > CORNER_THRESHOLD and abs_y > CORNER_THRESHOLD:
+                    return "HIGH_RISK", "Corner Looking"
+                
+                # High movement (clear cheating)
+                elif abs_x > CHEATING_THRESHOLD or abs_y > CHEATING_THRESHOLD:
+                    return "HIGH_RISK", "Clear Cheating"
+                
+                # Medium suspicion
+                elif abs_x > SUSPICIOUS_THRESHOLD or abs_y > SUSPICIOUS_THRESHOLD:
+                    return "MEDIUM_RISK", "Suspicious"
+                
+                # Low suspicion
+                else:
+                    return "LOW_RISK", "Slight Movement"
+
+                
+            # Different time thresholds based on risk level
+            def get_time_threshold(risk_level):
+                if risk_level == "HIGH_RISK":
+                    return 1.5  # 1.5 seconds for high risk
+                elif risk_level == "MEDIUM_RISK":
+                    return 3.0  # 3 seconds for medium risk  
+                elif risk_level == "LOW_RISK":
+                    return 5.0  # 5 seconds for low risk
+                else:
+                    return float('inf')  # Normal behavior - no time limit
+
+            # After calculating avg_diff_x and avg_diff_y
+
+            # Classify behavior
+            risk_level, behavior_type = classify_behavior(avg_diff_x, avg_diff_y)
+
+            # Get appropriate time threshold
+            time_threshold = get_time_threshold(risk_level)
+
+            # Timing logic
+            current_time = time.time()
+
+
+            if risk_level != "NORMAL":
+                if suspicious_start_time is None:
+                    suspicious_start_time = current_time
+                    current_risk_level = risk_level
+                    current_behavior = behavior_type
+                else:
+                    # Check if threshold time exceeded
+                    if current_time - suspicious_start_time > time_threshold:
+                        if not cheating_detected:
+                            cheating_detected = True
+                            alert_message = f"ALERT: {risk_level} - {behavior_type}"
+                            print(f"Cheating detected: {behavior_type}")
+            else:
+                # Reset when looking forward
+                suspicious_start_time = None
+                cheating_detected = False
+                alert_message = "Normal - Forward Looking"
+
+            # Visual feedback based on risk level
+            if cheating_detected:
+                if risk_level == "HIGH_RISK":
+                    rect_color = (0, 0, 255)    # Red
+                    text_color = (0, 0, 255)    # Red
+                    thickness = 5
+                elif risk_level == "MEDIUM_RISK":
+                    rect_color = (0, 165, 255)  # Orange
+                    text_color = (0, 165, 255)  # Orange
+                    thickness = 3
+                else:
+                    rect_color = (0, 255, 255)  # Yellow
+                    text_color = (0, 255, 255)  # Yellow
+                    thickness = 2
+                
+                # Draw warning
+                cv2.rectangle(frame, (50, 50), (300, 150), rect_color, thickness)
+                cv2.putText(frame, alert_message, (20, 200), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2)
+
+            # Display current values (for tuning)
+            cv2.putText(frame, f'Risk: {risk_level}', (20, 250), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            cv2.putText(frame, f'Behavior: {behavior_type}', (20, 270), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+
+
             # Draw face mesh (optional - you can comment this out)
             mp_drawing.draw_landmarks(
                 image=frame,
