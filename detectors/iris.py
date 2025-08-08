@@ -20,7 +20,7 @@ face_mesh = mp_face_mesh.FaceMesh(
 drawing_spec = mp_drawing.DrawingSpec(thickness=1, circle_radius=1)
 
 # Start video capture
-cap = cv2.VideoCapture(1)  # Change to 0 if using default camera
+cap = cv2.VideoCapture(0)  # Change to 0 if using default camera
 suspicious_start_time = None
 cheating_detected = False
 alert_message = "Normal - Forward Looking"
@@ -80,10 +80,10 @@ while cap.isOpened():
             
             # Draw eye and iris points (for visualization)
             cv2.circle(frame, (left_eye_x, left_eye_y), 3, (0, 255, 0), -1)  # Green - Eye center
-            cv2.circle(frame, (left_iris_x, left_iris_y), 2, (255, 0, 0), -1)  # Blue - Iris center
+            cv2.circle(frame, (left_iris_x, left_iris_y), 2, (0, 0, 255), -1)  # Blue - Iris center
             
             cv2.circle(frame, (right_eye_x, right_eye_y), 3, (0, 255, 0), -1)  # Green - Eye center
-            cv2.circle(frame, (right_iris_x, right_iris_y), 2, (255, 0, 0), -1)  # Blue - Iris center
+            cv2.circle(frame, (right_iris_x, right_iris_y), 2, (0, 0, 255), -1)  # Blue - Iris center
             
             # TODO: Calculate differences and implement gaze detection
 
@@ -254,11 +254,16 @@ while cap.isOpened():
                 connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_iris_connections_style()
             )
     
-    # Calculate and display FPS
-    end = time.time()
-    fps = 1 / (end - start)
-    cv2.putText(frame, f'FPS: {int(fps)}', (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    
+    # FPS Calculation with ZeroDivisionError protection
+            end = time.time()
+            totalTime = end - start
+
+            # Prevent division by zero
+            if totalTime > 0:
+                fps = 1 / totalTime
+            else:
+                fps = 0  # or use a default value like 30
+
     # Display instructions
     cv2.putText(frame, 'Green: Eye Center, Blue: Iris Center', (20, img_h - 30), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
@@ -274,3 +279,12 @@ while cap.isOpened():
 cap.release()
 cv2.destroyAllWindows()
 print("Iris detection stopped.")
+
+
+
+
+
+
+# OBJECT Oriented of this class 
+
+
