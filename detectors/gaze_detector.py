@@ -251,4 +251,3 @@ class GazeDetector(BaseDetector):
                 self.cheating_direction = None
         
         return self.cheating, self.cheating_direction, self.cheating_duration, self.cheating_count, self.cheating_duration_total
-
