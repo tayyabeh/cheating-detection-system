@@ -10,7 +10,7 @@ class ObjectDetector(BaseDetector):
     
     def __init__(self,alert_threshold_seconds = 5,conf_threshold=0.6):
         if ObjectDetector.model is None :
-            ObjectDetector.model = YOLO(r'models\yolo11s.pt')
+            ObjectDetector.model = YOLO(r'models\yolo11n.pt')
         self.no_person_start_time = None        
         self.no_object_start_time = None
         self.object_present = False
