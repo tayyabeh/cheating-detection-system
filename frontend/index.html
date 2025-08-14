@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Google Sign-In</title>
+  <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <!-- Google Sign-In Button -->
+  <div id="g_id_onload"
+       data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse">
+  </div>
+
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large">
+  </div>
+
+  <script>
+    function handleCredentialResponse(response) {
+      console.log("Google ID Token:", response.credential);
+      // Send token to FastAPI
+      fetch("http://localhost:8000/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: response.credential })
+      })
+      .then(res => res.json())
+      .then(data => console.log(data));
+    }
+  </script>
+</body>
+</html>
