@@ -1,3 +1,13 @@
+# 🎯 Cheating Detection System
+
+An AI-powered **real-time cheating detection system** for online exams.
+Uses **computer vision detectors**, **FastAPI backend**, **WebSockets**, and **admin/student dashboards** for secure proctoring.
+
+---
+
+## 📂 Project Structure
+
+```bash
 cheating_detection_system/
 ├── 📁 api/                     # FastAPI application
 │   ├── main.py                 # App entry point
@@ -79,3 +89,79 @@ cheating_detection_system/
 ├── .gitignore
 ├── README.md
 └── .env                        # Environment variables
+```
+
+---
+
+## 🔑 Key Integration Points
+
+### 📊 Detector Integration (`services/detection_service.py`)
+
+* **face\_detector.py** → Cheating status & face tracking
+* **gaze\_detector.py** → Gaze direction & attention
+* **object\_detector.py** → Person count & object detection
+
+### 📡 API Flow
+
+1. Student Extension → API Endpoints
+2. Detection Service → Your Detectors
+3. Results → Database
+
+### 📱 Real-time Flow
+
+1. Student Extension → WebSocket
+2. Violation Service → Admin Dashboard
+
+### 📁 File Flow
+
+* Screenshots → `storage/screenshots/`
+* Admin downloads → Auto-cleanup handled in background tasks
+
+### 🔄 Background Tasks
+
+* Process detector results
+* Clean up old screenshots
+* Monitor session timeouts
+
+---
+
+## 🚀 Getting Started
+
+### 1️⃣ Clone the repo
+
+```bash
+git clone https://github.com/your-username/cheating-detection-system.git
+cd cheating-detection-system
+```
+
+### 2️⃣ Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3️⃣ Set up environment
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=postgresql://user:password@localhost/cheating_detection
+SECRET_KEY=your_jwt_secret
+```
+
+### 4️⃣ Run the server
+
+```bash
+uvicorn api.main:app --reload
+```
+
+---
+
+## ✅ Features
+
+* 👨‍🎓 Student authentication & monitoring
+* 🧑‍💻 Admin dashboard with live updates
+* 🔍 Face, gaze, and object detection
+* 📸 Screenshot capture & violation logging
+* ⚡ Real-time WebSocket communication
+* 🧹 Auto-cleanup of old data
